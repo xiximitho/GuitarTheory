@@ -1,0 +1,148 @@
+.fretboard {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  user-select: none;
+}
+
+.fretboard__bg {
+  fill: var(--fb-wood, #2a2118);
+}
+
+.fretboard__nut {
+  fill: var(--fb-nut, #e8e0d0);
+}
+
+.fretboard__fret {
+  stroke: var(--fb-fret, #c4b59a);
+  stroke-width: 1.5;
+}
+
+.fretboard__fret--nut {
+  stroke-width: 0;
+}
+
+.fretboard__string {
+  stroke: var(--fb-string, #d9cbb0);
+  stroke-linecap: round;
+}
+
+.fretboard__inlay {
+  fill: var(--fb-inlay, #8a7a62);
+  opacity: 0.55;
+}
+
+.fretboard__open-label,
+.fretboard__fret-num {
+  fill: var(--muted, #6a655c);
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+.fretboard__hit {
+  fill: transparent;
+  cursor: pointer;
+}
+
+.fretboard--interactive .fretboard__hit:hover {
+  fill: rgba(255, 255, 255, 0.06);
+}
+
+.fretboard__mark circle {
+  stroke: rgba(0, 0, 0, 0.25);
+  stroke-width: 1;
+}
+
+.fretboard__mark text {
+  fill: #1a1510;
+  font-size: 9px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  pointer-events: none;
+}
+
+.fretboard__mark--selected circle {
+  fill: var(--accent, #d4a24c);
+}
+
+.fretboard__mark--scale circle {
+  fill: var(--scale, #7eb8a2);
+}
+
+.fretboard__mark--root circle {
+  fill: var(--root, #e85d4c);
+}
+
+.fretboard__mark--root text {
+  fill: #fff;
+}
+
+.fretboard__mark--lick circle {
+  fill: var(--lick, #5b8fd9);
+}
+
+.fretboard__mark--lick text {
+  fill: #fff;
+}
+
+.fretboard__mark--caged circle {
+  fill: var(--caged, #c4a35a);
+}
+
+.fretboard__mark.is-dimmed {
+  opacity: 0.35;
+}
+
+@media print {
+  .fretboard__bg {
+    fill: #fff;
+    stroke: #222;
+    stroke-width: 1;
+  }
+
+  .fretboard__nut {
+    fill: #111;
+  }
+
+  .fretboard__fret,
+  .fretboard__string {
+    stroke: #222;
+  }
+
+  .fretboard__inlay {
+    fill: #999;
+  }
+
+  .fretboard__open-label,
+  .fretboard__fret-num {
+    fill: #222;
+  }
+
+  .fretboard__mark--selected circle,
+  .fretboard__mark--scale circle,
+  .fretboard__mark--caged circle {
+    fill: #fff;
+    stroke: #111;
+    stroke-width: 1.5;
+  }
+
+  .fretboard__mark--root circle {
+    fill: #111;
+  }
+
+  .fretboard__mark--root text {
+    fill: #fff;
+  }
+
+  .fretboard__mark--lick circle {
+    fill: #333;
+  }
+
+  .fretboard__mark text {
+    fill: #111;
+  }
+
+  .fretboard__mark--lick text {
+    fill: #fff;
+  }
+}

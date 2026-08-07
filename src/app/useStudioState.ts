@@ -1,0 +1,297 @@
+import { useEffect, useMemo, useState } from 'react'
+import { buildStudioMarks } from '@/app/buildMarks'
+import { FRET_COUNT, MODE_SCALE_IDS, type AppTab } from '@/app/constants'
+import {
+  deleteStudy,
+  downloadExport,
+  importFromFile,
+  loadStudies,
+  newId,
+  upsertStudy,
+} from '@/storage/studies'
+import { CAGED_ORDER, type CagedShapeId } from '@/theory/caged'
+import { notesToPitchClasses, toggleNote } from '@/theory/fretboardUtils'
+import { matchScalesFromPcs } from '@/theory/matcher'
+import { STANDARD_TUNING, noteToPc, pcToName, type NoteName } from '@/theory/notes'
+import type { ScaleDefinition } from '@/theory/scales'
+import { transposeLickSteps, transposePositionsBySemitones } from '@/theory/transpose'
+import type { NotePos, PrintItem, Study } from '@/types/study'
+
+function shiftRoot(note: NoteName, semitones: number): NoteName {
+  return pcToName(noteToPc(note) + semitones, 'sharp')
+}
+
+function isModeScaleId(id: string): boolean {
+  return (MODE_SCALE_IDS as readonly string[]).includes(id)
+}
+
+export function useStudioState() {
+  const tuning = STANDARD_TUNING
+  const [tab, setTab] = useState<AppTab>('explorer')
+  const [rootOffset, setRootOffset] = useState(0)
+  const [selectedNotes, setSelectedNotes] = useState<NotePos[]>([])
+  const [lickSteps, setLickSteps] = useState<NotePos[]>([])
+  const [lickMode, setLickMode] = useState(false)
+  const [labelMode, setLabelMode] = useState<'note' | 'degree'>('note')
+  const [notesText, setNotesText] = useState('')
+
+  const [overlayScaleId, setOverlayScaleId] = useState<string | null>(null)
+  const [overlayRoot, setOverlayRoot] = useState<NoteName | null>(null)
+
+  const [cagedRoot, setCagedRoot] = useState<NoteName>('C')
+  const [cagedScaleId, setCagedScaleId] = useState('major')
+  const [cagedShapes, setCagedShapes] = useState<CagedShapeId[]>(['E'])
+  const [showAllCaged, setShowAllCaged] = useState(false)
+
+  const [studies, setStudies] = useState<Study[]>(() => loadStudies())
+  const [activeStudyId, setActiveStudyId] = useState<string | null>(null)
+  const [titleDraft, setTitleDraft] = useState('Novo estudo')
+
+  const [printItems, setPrintItems] = useState<PrintItem[]>([])
+  const [packTitle, setPackTitle] = useState('Pack de estudos')
+
+  const pcs = useMemo(
+    () => notesToPitchClasses(selectedNotes, tuning, 0),
+    [selectedNotes, tuning],
+  )
+  const lickPcs = useMemo(
+    () => notesToPitchClasses(lickSteps, tuning, 0),
+    [lickSteps, tuning],
+  )
+  const matches = useMemo(() => {
+    const source = tab === 'lick' && lickSteps.length ? lickPcs : pcs
+    return matchScalesFromPcs(source)
+  }, [tab, lickSteps.length, lickPcs, pcs])
+
+  const marks = useMemo(
+    () =>
+      buildStudioMarks({
+        tab,
+        tuning,
+        showAllCaged,
+        cagedShapes,
+        cagedRoot,
+        cagedScaleId,
+        overlayScaleId,
+        overlayRoot,
+        lickSteps,
+        selectedNotes,
+      }),
+    [
+      tab,
+      tuning,
+      showAllCaged,
+      cagedShapes,
+      cagedRoot,
+      cagedScaleId,
+      overlayScaleId,
+      overlayRoot,
+      lickSteps,
+      selectedNotes,
+    ],
+  )
+
+  useEffect(() => {
+    if (tab === 'lick') setLickMode(true)
+    else if (tab === 'explorer') setLickMode(false)
+  }, [tab])
+
+  function handleToggle(string: number, fret: number) {
+    if (lickMode || tab === 'lick') {
+      setLickSteps((prev) => [...prev, { string, fret }])
+      return
+    }
+    setSelectedNotes((prev) => toggleNote(prev, string, fret))
+  }
+
+  function handleSelectMatch(scale: ScaleDefinition, root: string) {
+    setOverlayScaleId(scale.id)
+    setOverlayRoot(root as NoteName)
+  }
+
+  function clearOverlay() {
+    setOverlayScaleId(null)
+    setOverlayRoot(null)
+  }
+
+  function transposeBoard(semitones: number) {
+    setSelectedNotes((n) => transposePositionsBySemitones(n, semitones, FRET_COUNT))
+    setLickSteps((n) => transposeLickSteps(n, semitones, FRET_COUNT))
+    setRootOffset((o) => o + semitones)
+    setOverlayRoot((r) => (r ? shiftRoot(r, semitones) : r))
+    setCagedRoot((r) => shiftRoot(r, semitones))
+  }
+
+  function saveCurrent() {
+    const now = new Date().toISOString()
+    const study: Study = {
+      id: activeStudyId ?? newId('study'),
+      title: titleDraft.trim() || 'Estudo sem título',
+      createdAt:
+        activeStudyId != null
+          ? (studies.find((s) => s.id === activeStudyId)?.createdAt ?? now)
+          : now,
+      updatedAt: now,
+      userId: null,
+      tuning: [...tuning],
+      rootOffset,
+      selectedNotes,
+      lick: lickSteps.length ? { steps: lickSteps } : undefined,
+      overlays:
+        overlayScaleId && overlayRoot
+          ? [
+              {
+                kind: isModeScaleId(overlayScaleId) ? 'mode' : 'scale',
+                id: overlayScaleId,
+                root: overlayRoot,
+              },
+            ]
+          : tab === 'caged'
+            ? [
+                {
+                  kind: 'caged',
+                  id: showAllCaged ? 'ALL' : cagedShapes.join(''),
+                  root: cagedRoot,
+                },
+              ]
+            : undefined,
+      notesText: notesText || undefined,
+      labelMode,
+    }
+    setStudies(upsertStudy(study))
+    setActiveStudyId(study.id)
+  }
+
+  function loadStudy(study: Study) {
+    setActiveStudyId(study.id)
+    setTitleDraft(study.title)
+    setRootOffset(study.rootOffset)
+    setSelectedNotes(study.selectedNotes)
+    setLickSteps(study.lick?.steps ?? [])
+    setNotesText(study.notesText ?? '')
+    setLabelMode(study.labelMode ?? 'note')
+    const ov = study.overlays?.[0]
+    if (ov?.kind === 'caged') {
+      setTab('caged')
+      setCagedRoot(ov.root)
+      if (ov.id === 'ALL') {
+        setShowAllCaged(true)
+      } else {
+        setShowAllCaged(false)
+        setCagedShapes(
+          ov.id
+            .split('')
+            .filter((c): c is CagedShapeId => CAGED_ORDER.includes(c as CagedShapeId)),
+        )
+      }
+      return
+    }
+    if (ov) {
+      setOverlayScaleId(ov.id)
+      setOverlayRoot(ov.root)
+      setTab('explorer')
+      return
+    }
+    setTab(study.lick?.steps.length ? 'lick' : 'explorer')
+  }
+
+  function currentAsPrintItem(): PrintItem {
+    if (tab === 'caged') {
+      return {
+        kind: 'caged',
+        title: `${cagedRoot} ${cagedScaleId} · CAGED ${showAllCaged ? 'ALL' : cagedShapes.join('')}`,
+        root: cagedRoot,
+        scaleId: cagedScaleId,
+        cagedShape: showAllCaged ? undefined : cagedShapes[0],
+        selectedNotes,
+        labelMode,
+        rootOffset,
+        notesText: notesText || undefined,
+      }
+    }
+    return {
+      kind: lickSteps.length ? 'lick' : overlayScaleId ? 'scale' : 'custom',
+      title: titleDraft || 'Vista atual',
+      root: overlayRoot ?? undefined,
+      scaleId: overlayScaleId ?? undefined,
+      selectedNotes,
+      lick: lickSteps.length ? { steps: lickSteps } : undefined,
+      labelMode,
+      rootOffset,
+      notesText: notesText || undefined,
+    }
+  }
+
+  function studyToPrintItem(study: Study): PrintItem {
+    return {
+      kind: 'study',
+      refId: study.id,
+      title: study.title,
+      root: study.overlays?.[0]?.root,
+      scaleId: study.overlays?.[0]?.id,
+      selectedNotes: study.selectedNotes,
+      lick: study.lick,
+      labelMode: study.labelMode ?? 'note',
+      rootOffset: study.rootOffset,
+      notesText: study.notesText,
+    }
+  }
+
+  return {
+    tuning,
+    tab,
+    setTab,
+    rootOffset,
+    setRootOffset,
+    selectedNotes,
+    setSelectedNotes,
+    lickSteps,
+    setLickSteps,
+    lickMode,
+    labelMode,
+    setLabelMode,
+    notesText,
+    setNotesText,
+    overlayScaleId,
+    overlayRoot,
+    cagedRoot,
+    setCagedRoot,
+    cagedScaleId,
+    setCagedScaleId,
+    cagedShapes,
+    setCagedShapes,
+    showAllCaged,
+    setShowAllCaged,
+    studies,
+    setStudies,
+    activeStudyId,
+    setActiveStudyId,
+    titleDraft,
+    setTitleDraft,
+    printItems,
+    setPrintItems,
+    packTitle,
+    setPackTitle,
+    matches,
+    marks,
+    handleToggle,
+    handleSelectMatch,
+    clearOverlay,
+    transposeBoard,
+    saveCurrent,
+    loadStudy,
+    currentAsPrintItem,
+    studyToPrintItem,
+    exportStudies: downloadExport,
+    importStudies: async (file: File) => {
+      await importFromFile(file, 'merge')
+      setStudies(loadStudies())
+    },
+    removeStudy: (id: string) => {
+      setStudies(deleteStudy(id))
+      if (activeStudyId === id) setActiveStudyId(null)
+    },
+  }
+}
+
+export type StudioState = ReturnType<typeof useStudioState>
