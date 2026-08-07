@@ -1,0 +1,15 @@
+---
+description: Contexto geral do GuitarTheory para qualquer tarefa
+alwaysApply: true
+---
+
+# GuitarTheory
+
+App React + Vite + TS de estudos no braço da guitarra (PT-BR).
+
+- Leia `AGENTS.md` para estado do produto, estrutura e **pendências**.
+- Alias `@/*` → `src/*`.
+- Camadas: `theory/` pura (sem React); estado em `src/app/useStudioState.ts`; UI fina em `App.tsx`.
+- Persistência atual: localStorage + JSON. Auth é stub em `src/storage/auth.ts` — não implementar login sem pedido.
+- Validar com `npm run check` em mudanças relevantes.
+- UI em português; ids de escala em inglês (`dorian`, `minor-pentatonic`).

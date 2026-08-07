@@ -1,0 +1,13 @@
+---
+description: Padrões de UI React e print do estúdio
+globs: src/app/**/*.{ts,tsx},src/features/**/*.{ts,tsx},src/components/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# UI
+
+- Features são painéis com props; lógica de domínio no hook ou em `theory/`.
+- Braço: `Fretboard` SVG; print usa `interactive={false}` + classe `.no-print` na chrome.
+- Marks: tipo `FretMark` em `src/types/fretboard.ts`; montar via `buildStudioMarks` / `fretboardUtils`.
+- Estilos: CSS variables em `styles/app.css`; não introduzir design system pesado.
+- Evitar cards/dashboard genéricos; manter layout de estúdio focado no braço.

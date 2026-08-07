@@ -1,0 +1,13 @@
+---
+description: Regras da engine teórica (notas, escalas, CAGED, matcher)
+globs: src/theory/**/*
+alwaysApply: false
+---
+
+# theory/
+
+- Sem imports de `app/`, `features/`, `components/` ou DOM.
+- Pitch class 0–11, C = 0. String `0` = low E.
+- Novas escalas: `SCALE_CATALOG` em `scales.ts` + teste em `matcher.test.ts`.
+- CAGED: shapes relativos a C; roots sempre recalculados por pitch após transpose.
+- Preferir funções puras e Vitest; manter API estável usada por `fretboardUtils` / `buildMarks`.

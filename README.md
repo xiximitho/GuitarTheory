@@ -2,6 +2,8 @@
 
 Web app de estudos de guitarra: braço interativo, descoberta de escalas/modos, CAGED, licks e impressão de vários diagramas.
 
+Documentação para agentes de IA: [AGENTS.md](./AGENTS.md) (o que existe, pendências, camadas e convenções). Regras Cursor em [`.cursor/rules/`](./.cursor/rules/).
+
 ## Rodar
 
 ```bash
