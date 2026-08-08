@@ -15,7 +15,10 @@ import { matchScalesFromPcs } from '@/theory/matcher'
 import { STANDARD_TUNING, noteToPc, pcToName, type NoteName } from '@/theory/notes'
 import type { ScaleDefinition } from '@/theory/scales'
 import { transposeLickSteps, transposePositionsBySemitones } from '@/theory/transpose'
+import type { LabelMode } from '@/types/fretboard'
 import type { NotePos, PrintItem, Study } from '@/types/study'
+
+type StudioLabelMode = Exclude<LabelMode, 'none'>
 
 function shiftRoot(note: NoteName, semitones: number): NoteName {
   return pcToName(noteToPc(note) + semitones, 'sharp')
@@ -32,7 +35,9 @@ export function useStudioState() {
   const [selectedNotes, setSelectedNotes] = useState<NotePos[]>([])
   const [lickSteps, setLickSteps] = useState<NotePos[]>([])
   const [lickMode, setLickMode] = useState(false)
-  const [labelMode, setLabelMode] = useState<'note' | 'degree'>('note')
+  const [labelMode, setLabelMode] = useState<StudioLabelMode>('note')
+  /** Tônica explícita para graus/intervalos; `null` = automática (escala/CAGED). */
+  const [labelTonic, setLabelTonic] = useState<NoteName | null>(null)
   const [notesText, setNotesText] = useState('')
 
   const [overlayScaleId, setOverlayScaleId] = useState<string | null>(null)
@@ -62,6 +67,12 @@ export function useStudioState() {
     const source = tab === 'lick' && lickSteps.length ? lickPcs : pcs
     return matchScalesFromPcs(source)
   }, [tab, lickSteps.length, lickPcs, pcs])
+
+  const labelRoot = useMemo((): NoteName | undefined => {
+    if (labelTonic) return labelTonic
+    if (tab === 'caged') return cagedRoot
+    return overlayRoot ?? undefined
+  }, [labelTonic, tab, cagedRoot, overlayRoot])
 
   const marks = useMemo(
     () =>
@@ -105,8 +116,10 @@ export function useStudioState() {
   }
 
   function handleSelectMatch(scale: ScaleDefinition, root: string) {
+    const note = root as NoteName
     setOverlayScaleId(scale.id)
-    setOverlayRoot(root as NoteName)
+    setOverlayRoot(note)
+    setLabelTonic(note)
   }
 
   function clearOverlay() {
@@ -120,6 +133,7 @@ export function useStudioState() {
     setRootOffset((o) => o + semitones)
     setOverlayRoot((r) => (r ? shiftRoot(r, semitones) : r))
     setCagedRoot((r) => shiftRoot(r, semitones))
+    setLabelTonic((r) => (r ? shiftRoot(r, semitones) : r))
   }
 
   function saveCurrent() {
@@ -157,6 +171,7 @@ export function useStudioState() {
             : undefined,
       notesText: notesText || undefined,
       labelMode,
+      labelTonic: labelTonic ?? undefined,
     }
     setStudies(upsertStudy(study))
     setActiveStudyId(study.id)
@@ -170,6 +185,7 @@ export function useStudioState() {
     setLickSteps(study.lick?.steps ?? [])
     setNotesText(study.notesText ?? '')
     setLabelMode(study.labelMode ?? 'note')
+    setLabelTonic(study.labelTonic ?? study.overlays?.[0]?.root ?? null)
     const ov = study.overlays?.[0]
     if (ov?.kind === 'caged') {
       setTab('caged')
@@ -196,11 +212,12 @@ export function useStudioState() {
   }
 
   function currentAsPrintItem(): PrintItem {
+    const printRoot = labelRoot
     if (tab === 'caged') {
       return {
         kind: 'caged',
         title: `${cagedRoot} ${cagedScaleId} · CAGED ${showAllCaged ? 'ALL' : cagedShapes.join('')}`,
-        root: cagedRoot,
+        root: printRoot ?? cagedRoot,
         scaleId: cagedScaleId,
         cagedShape: showAllCaged ? undefined : cagedShapes[0],
         selectedNotes,
@@ -212,7 +229,7 @@ export function useStudioState() {
     return {
       kind: lickSteps.length ? 'lick' : overlayScaleId ? 'scale' : 'custom',
       title: titleDraft || 'Vista atual',
-      root: overlayRoot ?? undefined,
+      root: printRoot,
       scaleId: overlayScaleId ?? undefined,
       selectedNotes,
       lick: lickSteps.length ? { steps: lickSteps } : undefined,
@@ -227,7 +244,7 @@ export function useStudioState() {
       kind: 'study',
       refId: study.id,
       title: study.title,
-      root: study.overlays?.[0]?.root,
+      root: study.labelTonic ?? study.overlays?.[0]?.root,
       scaleId: study.overlays?.[0]?.id,
       selectedNotes: study.selectedNotes,
       lick: study.lick,
@@ -250,6 +267,9 @@ export function useStudioState() {
     lickMode,
     labelMode,
     setLabelMode,
+    labelTonic,
+    setLabelTonic,
+    labelRoot,
     notesText,
     setNotesText,
     overlayScaleId,

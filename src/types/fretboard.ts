@@ -9,4 +9,4 @@ export type FretMark = {
   dimmed?: boolean
 }
 
-export type LabelMode = 'note' | 'degree' | 'none'
+export type LabelMode = 'note' | 'degree' | 'interval' | 'none'

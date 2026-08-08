@@ -5,6 +5,7 @@ import { CagedPanel } from '@/features/caged/CagedPanel'
 import { ExplorerPanel } from '@/features/explorer/ExplorerPanel'
 import { PrintPanel } from '@/features/print/PrintPanel'
 import { StudiesPanel } from '@/features/studies/StudiesPanel'
+import { ROOT_OPTIONS, type NoteName } from '@/theory/notes'
 import '@/styles/app.css'
 
 export default function App() {
@@ -85,7 +86,42 @@ export default function App() {
                 >
                   Graus
                 </button>
+                <button
+                  type="button"
+                  className={`chip ${s.labelMode === 'interval' ? 'is-active' : ''}`}
+                  onClick={() => s.setLabelMode('interval')}
+                >
+                  Intervalos
+                </button>
               </div>
+
+              {(s.labelMode === 'degree' || s.labelMode === 'interval') && (
+                <div className="toolbar__group">
+                  <span className="toolbar__label">Tônica</span>
+                  <select
+                    className="toolbar__select"
+                    value={s.labelTonic ?? ''}
+                    onChange={(e) =>
+                      s.setLabelTonic(
+                        e.target.value ? (e.target.value as NoteName) : null,
+                      )
+                    }
+                    title="Base dos graus/intervalos. Automática usa a root da escala selecionada."
+                  >
+                    <option value="">Automática</option>
+                    {ROOT_OPTIONS.map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                  {!s.labelRoot && (
+                    <span className="toolbar__hint">
+                      Escolha uma tônica ou uma escala
+                    </span>
+                  )}
+                </div>
+              )}
 
               <div className="toolbar__group">
                 {(s.tab === 'lick' || s.lickMode) && (
@@ -128,7 +164,7 @@ export default function App() {
               interactive
               onToggleNote={s.handleToggle}
               labelMode={s.labelMode}
-              degreeRoot={s.tab === 'caged' ? s.cagedRoot : (s.overlayRoot ?? undefined)}
+              degreeRoot={s.labelRoot}
             />
 
             <label className="field field--wide no-print">

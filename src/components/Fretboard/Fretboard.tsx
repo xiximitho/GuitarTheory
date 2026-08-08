@@ -1,6 +1,7 @@
 import {
   degreeLabel,
   fretNotePc,
+  intervalLabel,
   pcToName,
   type AccidentalPreference,
   type NoteName,
@@ -162,6 +163,9 @@ export function Fretboard({
           if (labelMode === 'note' && mark) text = pcToName(pc, accidental)
           if (labelMode === 'degree' && mark && degreeRoot) {
             text = degreeLabel(rootPc, pc)
+          }
+          if (labelMode === 'interval' && mark && degreeRoot) {
+            text = intervalLabel(rootPc, pc)
           }
           if (mark?.label) text = mark.label
           if (mark?.order != null) text = String(mark.order)

@@ -1,6 +1,6 @@
 import { CAGED_ORDER, type CagedShapeId } from '@/theory/caged'
-import { ROOT_OPTIONS, type NoteName } from '@/theory/notes'
-import { SCALE_CATALOG } from '@/theory/scales'
+import { formatScaleFormula, ROOT_OPTIONS, type NoteName } from '@/theory/notes'
+import { getScaleById, SCALE_CATALOG } from '@/theory/scales'
 
 type Props = {
   root: NoteName
@@ -26,6 +26,7 @@ export function CagedPanel({
   const modes = SCALE_CATALOG.filter(
     (s) => s.category === 'mode' || s.id === 'major' || s.id === 'natural-minor',
   )
+  const selected = getScaleById(scaleId)
 
   return (
     <aside className="panel">
@@ -59,6 +60,10 @@ export function CagedPanel({
           ))}
         </select>
       </label>
+
+      {selected && (
+        <p className="scale-formula">{formatScaleFormula(selected.intervals)}</p>
+      )}
 
       <div className="field">
         <span>Shapes CAGED</span>

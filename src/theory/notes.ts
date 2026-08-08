@@ -125,6 +125,7 @@ export function fretNotePc(
   return normalizePc(noteToPc(openStringNote) + fret + rootOffset)
 }
 
+/** Scale-degree style: 1, b2, 2, … #4, 5, … */
 export function degreeLabel(rootPc: PitchClass, notePc: PitchClass): string {
   const interval = normalizePc(notePc - rootPc)
   const labels = ['1', 'b2', '2', 'b3', '3', '4', '#4', '5', 'b6', '6', 'b7', '7']
@@ -151,4 +152,34 @@ export function degreeLabelPreferFlatFifth(
     11: '7',
   }
   return map[interval]
+}
+
+/**
+ * Interval quality labels for fretboard (compact PT-BR guitar style).
+ * Tritone is neutral `TT` (A4 / d5).
+ */
+export function intervalLabel(rootPc: PitchClass, notePc: PitchClass): string {
+  const interval = normalizePc(notePc - rootPc)
+  const labels = ['1', '2m', '2M', '3m', '3M', '4', 'TT', '5', '6m', '6M', '7m', '7M']
+  return labels[interval] ?? String(interval)
+}
+
+/** Fórmula intervalar de uma escala (ex.: `1 2 b3 4 5 6 b7`). */
+export function scaleFormulaLabels(intervals: readonly number[]): string[] {
+  const hasTritone = intervals.includes(6)
+  const hasPerfectFifth = intervals.includes(7)
+  const hasMinorThird = intervals.includes(3)
+  const hasMajorThird = intervals.includes(4)
+  // Locrian (no P5) or blues-like (#4/b5 with b3 + P5) → b5; Lydian → #4
+  const preferFlatFifth =
+    hasTritone && (!hasPerfectFifth || (hasMinorThird && !hasMajorThird))
+  return intervals.map((semitones) =>
+    preferFlatFifth
+      ? degreeLabelPreferFlatFifth(0, semitones)
+      : degreeLabel(0, semitones),
+  )
+}
+
+export function formatScaleFormula(intervals: readonly number[]): string {
+  return scaleFormulaLabels(intervals).join(' ')
 }

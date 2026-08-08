@@ -33,7 +33,9 @@ export type Study = {
   lick?: Lick
   overlays?: StudyOverlay[]
   notesText?: string
-  labelMode?: 'note' | 'degree'
+  labelMode?: 'note' | 'degree' | 'interval'
+  /** Tônica para labels de grau/intervalo; se ausente, usa root do overlay. */
+  labelTonic?: NoteName
 }
 
 export type PrintItemKind = 'study' | 'scale' | 'caged' | 'lick' | 'custom'
@@ -48,7 +50,7 @@ export type PrintItem = {
   selectedNotes?: NotePos[]
   lick?: Lick
   overlays?: StudyOverlay[]
-  labelMode: 'note' | 'degree'
+  labelMode: 'note' | 'degree' | 'interval'
   rootOffset?: number
   notesText?: string
 }

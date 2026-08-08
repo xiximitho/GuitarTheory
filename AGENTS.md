@@ -17,15 +17,15 @@ Idioma da UI: **português (Brasil)**.
 
 ## Stack
 
-| Peça | Escolha |
-| --- | --- |
-| UI | React 19 + TypeScript |
-| Build | Vite 8 |
-| Testes | Vitest (só `src/theory/**/*.test.ts` por enquanto) |
-| Lint / format | Oxlint + Prettier + EditorConfig |
-| Persistência MVP | `localStorage` + export/import JSON |
-| Fontes | `@fontsource/*` self-hosted (latin / latin-ext) |
-| Compressão build | `vite-plugin-compression2` → `.gz` + `.br` |
+| Peça             | Escolha                                            |
+| ---------------- | -------------------------------------------------- |
+| UI               | React 19 + TypeScript                              |
+| Build            | Vite 8                                             |
+| Testes           | Vitest (só `src/theory/**/*.test.ts` por enquanto) |
+| Lint / format    | Oxlint + Prettier + EditorConfig                   |
+| Persistência MVP | `localStorage` + export/import JSON                |
+| Fontes           | `@fontsource/*` self-hosted (latin / latin-ext)    |
+| Compressão build | `vite-plugin-compression2` → `.gz` + `.br`         |
 
 Alias: `@/*` → `src/*`.
 

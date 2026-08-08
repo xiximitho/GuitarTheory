@@ -173,6 +173,21 @@ textarea {
   text-align: center;
 }
 
+.toolbar__select {
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 10px;
+  padding: 0.3rem 0.55rem;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  min-width: 6.5rem;
+}
+
+.toolbar__hint {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
 .panel {
   background: var(--bg-elev);
   border: 1px solid var(--line);
@@ -352,6 +367,21 @@ textarea {
 .match-item__title,
 .study-item__main strong {
   font-weight: 600;
+}
+
+.match-item__intervals {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+}
+
+.scale-formula {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+  margin: -0.35rem 0 0.75rem;
+  color: var(--ink);
 }
 
 .match-item__meta,
