@@ -2,7 +2,6 @@ import { Fretboard } from '@/components/Fretboard/Fretboard'
 import { cagedForScale, cagedShapeForRoot, type CagedShapeId } from '@/theory/caged'
 import {
   buildCagedMarks,
-  buildLickMarks,
   buildScaleMarks,
   buildSelectedMarks,
   mergeMarks,
@@ -45,6 +44,8 @@ export function PrintPanel({
         </div>
         <p className="panel__hint">
           Monte um documento com vários desenhos, escalas e estudos no mesmo PDF.
+          “Adicionar vista atual” captura o braço ativo. “Adicionar estudo” inclui um
+          diagrama por braço do estudo.
         </p>
 
         <label className="field">
@@ -58,7 +59,12 @@ export function PrintPanel({
         </label>
 
         <div className="btn-row">
-          <button type="button" className="btn btn--primary" onClick={onAddCurrent}>
+          <button
+            type="button"
+            className="btn btn--primary"
+            onClick={onAddCurrent}
+            title="Usa o estado do braço da aba anterior"
+          >
             Adicionar vista atual
           </button>
           <button type="button" className="btn" onClick={onPrint}>
@@ -79,7 +85,7 @@ export function PrintPanel({
                 onClick={() => onAddStudy(study)}
               >
                 <span className="match-item__title">{study.title}</span>
-                <span className="match-item__meta">Adicionar ao documento</span>
+                <span className="match-item__meta">Adicionar braço(s) ao documento</span>
               </button>
             </li>
           ))}
@@ -89,38 +95,44 @@ export function PrintPanel({
         </ul>
 
         <h3 className="subhead">Itens no documento ({items.length})</h3>
-        <ol className="print-item-list">
-          {items.map((item, i) => (
-            <li key={`${item.title}-${i}`} className="print-item-list__row">
-              <span>
-                {i + 1}. {item.title}
-              </span>
-              <span className="btn-row">
-                <button
-                  type="button"
-                  className="btn btn--ghost"
-                  onClick={() => onMove(i, -1)}
-                >
-                  ↑
-                </button>
-                <button
-                  type="button"
-                  className="btn btn--ghost"
-                  onClick={() => onMove(i, 1)}
-                >
-                  ↓
-                </button>
-                <button
-                  type="button"
-                  className="btn btn--ghost btn--danger"
-                  onClick={() => onRemove(i)}
-                >
-                  Remover
-                </button>
-              </span>
-            </li>
-          ))}
-        </ol>
+        {items.length === 0 ? (
+          <p className="empty">
+            Nenhum diagrama ainda. Adicione a vista atual ou um estudo salvo.
+          </p>
+        ) : (
+          <ol className="print-item-list">
+            {items.map((item, i) => (
+              <li key={`${item.title}-${i}`} className="print-item-list__row">
+                <span>
+                  {i + 1}. {item.title}
+                </span>
+                <span className="btn-row">
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    onClick={() => onMove(i, -1)}
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    onClick={() => onMove(i, 1)}
+                  >
+                    ↓
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn--ghost btn--danger"
+                    onClick={() => onRemove(i)}
+                  >
+                    Remover
+                  </button>
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
       </aside>
 
       <div className="print-preview" id="print-root">
@@ -157,9 +169,10 @@ function PrintBlock({
   tuning: NoteName[]
   index: number
 }) {
-  const fretCount = 15
+  const lastFret = 15
   const labelMode = item.labelMode
-  let marks = buildSelectedMarks(item.selectedNotes ?? [])
+  const selected = [...(item.selectedNotes ?? []), ...(item.lick?.steps ?? [])]
+  let marks = buildSelectedMarks(selected)
 
   if (item.cagedShape && item.root) {
     const positions = item.scaleId
@@ -169,19 +182,15 @@ function PrintBlock({
           item.scaleId,
           tuning,
           0,
-          fretCount,
+          lastFret,
         )
-      : cagedShapeForRoot(item.cagedShape as CagedShapeId, item.root, tuning, fretCount)
+      : cagedShapeForRoot(item.cagedShape as CagedShapeId, item.root, tuning, lastFret)
     marks = mergeMarks(buildCagedMarks(positions), marks)
   } else if (item.scaleId && item.root) {
     marks = mergeMarks(
-      buildScaleMarks(tuning, item.root, item.scaleId, fretCount, 0),
+      buildScaleMarks(tuning, item.root, item.scaleId, lastFret, 0),
       marks,
     )
-  }
-
-  if (item.lick?.steps.length) {
-    marks = mergeMarks(marks, buildLickMarks(item.lick.steps))
   }
 
   return (
@@ -198,7 +207,8 @@ function PrintBlock({
       )}
       <Fretboard
         tuning={tuning}
-        fretCount={fretCount}
+        firstFret={0}
+        lastFret={lastFret}
         rootOffset={0}
         marks={marks}
         annotations={item.annotations ?? []}

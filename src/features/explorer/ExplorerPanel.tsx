@@ -56,18 +56,19 @@ export function ExplorerPanel({
         <h2>Escalas possíveis</h2>
         {(activeScaleId || matches.length > 0) && (
           <button type="button" className="btn btn--ghost" onClick={onClear}>
-            Limpar overlay
+            Limpar escala
           </button>
         )}
       </div>
       <p className="panel__hint">
-        Clique no braço para marcar/desmarcar notas. A lista mostra todas as escalas e
-        modos possíveis — ao escolher uma, a tônica dos intervalos acompanha (ou defina
-        outra no toolbar).
+        Clique no braço para marcar ou desmarcar notas. Escolha uma escala para ver o
+        overlay; a tônica dos graus acompanha (ou defina outra no toolbar).
       </p>
 
       {matches.length === 0 && (
-        <p className="empty">Nenhuma escala ainda — selecione pelo menos 3 notas.</p>
+        <p className="empty">
+          Nenhuma escala ainda — marque notas no braço para descobrir escalas e modos.
+        </p>
       )}
 
       {exact.length > 0 && (

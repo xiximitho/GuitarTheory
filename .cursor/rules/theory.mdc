@@ -7,7 +7,9 @@ alwaysApply: false
 # theory/
 
 - Sem imports de `app/`, `features/`, `components/` ou DOM.
-- Pitch class 0–11, C = 0. String `0` = low E.
+- Pitch class 0–11, C = 0. String `0` = corda mais grave (low E no padrão).
+- Afinações: `STANDARD_TUNING` + `TUNING_PRESETS` / `resizeTuning` em `notes.ts` (6–8 cordas).
 - Novas escalas: `SCALE_CATALOG` em `scales.ts` + teste em `matcher.test.ts`.
 - CAGED: shapes relativos a C; roots sempre recalculados por pitch após transpose.
 - Preferir funções puras e Vitest; manter API estável usada por `fretboardUtils` / `buildMarks`.
+- `buildScaleMarks(..., lastFret, rootOffset, firstFret?)` — janela de trastes inclusiva.

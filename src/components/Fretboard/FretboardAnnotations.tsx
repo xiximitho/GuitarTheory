@@ -7,6 +7,10 @@ type Layout = {
   cellH: number
   nutW: number
   labelW: number
+  firstFret?: number
+  lastFret?: number
+  leftHanded?: boolean
+  width?: number
 }
 
 function cellCenter(
@@ -14,10 +18,25 @@ function cellCenter(
   fret: number,
   layout: Layout,
 ): { x: number; y: number } {
-  const { stringCount, cellW, cellH, nutW, labelW } = layout
+  const {
+    stringCount,
+    cellW,
+    cellH,
+    nutW,
+    labelW,
+    firstFret = 0,
+    leftHanded = false,
+    width = 0,
+  } = layout
   const displayRow = stringCount - 1 - string
-  const x =
-    fret === 0 ? labelW + nutW / 2 : labelW + nutW + (fret - 1) * cellW + cellW / 2
+  let x: number
+  if (firstFret === 0 && fret === 0) {
+    x = labelW + nutW / 2
+  } else {
+    const index = firstFret === 0 ? fret - 1 : fret - firstFret
+    x = labelW + nutW + index * cellW + cellW / 2
+  }
+  if (leftHanded && width > 0) x = width - x
   const y = 8 + displayRow * cellH + cellH / 2
   return { x, y }
 }

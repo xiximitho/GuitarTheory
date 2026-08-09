@@ -13,14 +13,6 @@ export function transposePositionsBySemitones<T extends NotePos>(
     .filter((p) => p.fret >= 0 && p.fret <= maxFret)
 }
 
-export function transposeLickSteps(
-  steps: NotePos[],
-  semitones: number,
-  maxFret = 22,
-): NotePos[] {
-  return transposePositionsBySemitones(steps, semitones, maxFret)
-}
-
 export function wrapRootOffset(offset: number): number {
   return normalizePc(offset)
 }

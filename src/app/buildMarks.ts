@@ -1,6 +1,5 @@
 import {
   buildCagedMarks,
-  buildLickMarks,
   buildScaleMarks,
   buildSelectedMarks,
   mergeMarks,
@@ -14,7 +13,7 @@ import {
 import type { NoteName } from '@/theory/notes'
 import type { FretMark } from '@/types/fretboard'
 import type { NotePos } from '@/types/study'
-import { FRET_COUNT, type AppTab } from './constants'
+import { DEFAULT_LAST_FRET, type AppTab } from './constants'
 
 type BuildMarksInput = {
   tab: AppTab
@@ -26,8 +25,9 @@ type BuildMarksInput = {
   cagedScaleId: string | null
   overlayScaleId: string | null
   overlayRoot: NoteName | null
-  lickSteps: NotePos[]
   selectedNotes: NotePos[]
+  firstFret?: number
+  lastFret?: number
 }
 
 export function buildStudioMarks(input: BuildMarksInput): FretMark[] {
@@ -40,8 +40,9 @@ export function buildStudioMarks(input: BuildMarksInput): FretMark[] {
     cagedScaleId,
     overlayScaleId,
     overlayRoot,
-    lickSteps,
     selectedNotes,
+    firstFret = 0,
+    lastFret = DEFAULT_LAST_FRET,
   } = input
 
   if (tab === 'caged') {
@@ -49,24 +50,25 @@ export function buildStudioMarks(input: BuildMarksInput): FretMark[] {
     const groups = shapes.map((shape) =>
       buildCagedMarks(
         cagedScaleId
-          ? cagedForScale(shape, cagedRoot, cagedScaleId, tuning, 0, FRET_COUNT)
-          : cagedShapeForRoot(shape, cagedRoot, tuning, FRET_COUNT),
+          ? cagedForScale(shape, cagedRoot, cagedScaleId, tuning, 0, lastFret)
+          : cagedShapeForRoot(shape, cagedRoot, tuning, lastFret),
       ),
     )
-    return mergeMarks(...groups)
+    return mergeMarks(...groups).filter((m) => m.fret >= firstFret && m.fret <= lastFret)
   }
 
   const groups: FretMark[][] = []
 
   if (overlayScaleId && overlayRoot) {
-    groups.push(buildScaleMarks(tuning, overlayRoot, overlayScaleId, FRET_COUNT, 0))
-  }
-  if (tab === 'lick' || lickSteps.length > 0) {
-    groups.push(buildLickMarks(lickSteps))
+    groups.push(
+      buildScaleMarks(tuning, overlayRoot, overlayScaleId, lastFret, 0, firstFret),
+    )
   }
   if (selectedNotes.length) {
     groups.push(buildSelectedMarks(selectedNotes))
   }
 
-  return mergeMarks(...groups)
+  return mergeMarks(...groups).filter(
+    (m) => m.fret >= firstFret && m.fret <= lastFret && m.string < tuning.length,
+  )
 }

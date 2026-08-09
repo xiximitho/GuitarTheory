@@ -27,17 +27,20 @@ export function buildScaleMarks(
   tuning: NoteName[],
   root: NoteName,
   scaleId: string,
-  fretCount: number,
+  lastFret: number,
   rootOffset = 0,
+  firstFret = 0,
 ): FretMark[] {
   const scale = getScaleById(scaleId)
   if (!scale) return []
   const pcs = scalePitchClasses(root, scale)
   const rootPc = noteToPc(root)
   const marks: FretMark[] = []
+  const from = Math.max(0, firstFret)
+  const to = Math.max(from, lastFret)
 
   for (let s = 0; s < tuning.length; s++) {
-    for (let f = 0; f <= fretCount; f++) {
+    for (let f = from; f <= to; f++) {
       const pc = fretNotePc(tuning[s], f, rootOffset)
       if (!pcs.has(pc)) continue
       marks.push({
@@ -50,20 +53,22 @@ export function buildScaleMarks(
   return marks
 }
 
+/** Remove posições fora do braço (cordas / trastes). */
+export function clipPositionsToBoard<T extends NotePos>(
+  positions: T[],
+  stringCount: number,
+  lastFret: number,
+): T[] {
+  return positions.filter(
+    (p) => p.string >= 0 && p.string < stringCount && p.fret >= 0 && p.fret <= lastFret,
+  )
+}
+
 export function buildSelectedMarks(notes: NotePos[]): FretMark[] {
   return notes.map((n) => ({
     string: n.string,
     fret: n.fret,
     kind: 'selected',
-  }))
-}
-
-export function buildLickMarks(steps: NotePos[]): FretMark[] {
-  return steps.map((n, i) => ({
-    string: n.string,
-    fret: n.fret,
-    kind: 'lick',
-    order: i + 1,
   }))
 }
 

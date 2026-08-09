@@ -29,7 +29,7 @@ export const CONNECTION_ANNOTATIONS: ReadonlySet<AnnotationKind> = new Set([
 
 export const BOARD_TOOLS: ReadonlyArray<{ id: BoardTool; label: string; title: string }> =
   [
-    { id: 'select', label: 'Notas', title: 'Marcar / desmarcar notas' },
+    { id: 'select', label: 'Marcar', title: 'Marcar / desmarcar notas no braço' },
     { id: 'line', label: 'Linha', title: 'Linha entre duas casas' },
     { id: 'arrow', label: 'Seta', title: 'Linha com seta' },
     { id: 'slide', label: 'Slide', title: 'Slide entre duas casas' },

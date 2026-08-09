@@ -1,6 +1,32 @@
 import { describe, expect, it } from 'vitest'
-import { formatScaleFormula, intervalLabel, noteToPc, scaleFormulaLabels } from './notes'
+import {
+  formatScaleFormula,
+  fretNotePc,
+  intervalLabel,
+  matchTuningPresetId,
+  normalizePc,
+  noteToPc,
+  scaleFormulaLabels,
+  STANDARD_TUNING,
+} from './notes'
 import { getScaleById } from './scales'
+
+describe('normalizePc / fretNotePc', () => {
+  it('wraps negative and large pitch classes', () => {
+    expect(normalizePc(-1)).toBe(11)
+    expect(normalizePc(13)).toBe(1)
+  })
+
+  it('computes fretted pitch on standard low E', () => {
+    expect(fretNotePc(STANDARD_TUNING[0]!, 0)).toBe(noteToPc('E'))
+    expect(fretNotePc(STANDARD_TUNING[0]!, 5)).toBe(noteToPc('A'))
+  })
+
+  it('matches standard preset id', () => {
+    expect(matchTuningPresetId(STANDARD_TUNING)).toBe('standard')
+    expect(matchTuningPresetId(['D', 'A', 'D', 'G', 'B', 'E'])).toBe('drop-d')
+  })
+})
 
 describe('intervalLabel', () => {
   it('labels qualities from a root', () => {

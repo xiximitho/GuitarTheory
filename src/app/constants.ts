@@ -1,9 +1,14 @@
+/** Último traste padrão (braço mostra 0…FRET_COUNT). */
 export const FRET_COUNT = 15
+export const DEFAULT_FIRST_FRET = 0
+export const DEFAULT_LAST_FRET = FRET_COUNT
+export const MAX_LAST_FRET = 24
+export const MIN_STRINGS = 6
+export const MAX_STRINGS = 8
 
 export const APP_TABS = [
   ['explorer', 'Explorar'],
   ['caged', 'CAGED / Modos'],
-  ['lick', 'Licks'],
   ['studies', 'Estudos'],
   ['print', 'Imprimir'],
 ] as const

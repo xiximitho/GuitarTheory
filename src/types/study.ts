@@ -1,3 +1,4 @@
+import type { CagedShapeId } from '@/theory/caged'
 import type { NoteName } from '@/theory/notes'
 import type { FretAnnotation } from '@/types/annotation'
 
@@ -14,12 +15,29 @@ export type StudyOverlay = {
   root: NoteName
 }
 
+/** @deprecated Sequência numerada removida; mantido só para import de JSON antigo. */
 export type Lick = {
   steps: NotePos[]
 }
 
+/** Um braço dentro de um estudo (notas/overlay/anotações independentes). */
+export type StudyBoard = {
+  id: string
+  title?: string
+  selectedNotes: NotePos[]
+  overlays?: StudyOverlay[]
+  annotations?: FretAnnotation[]
+  firstFret?: number
+  lastFret?: number
+  cagedRoot?: NoteName
+  cagedScaleId?: string | null
+  cagedShapes?: CagedShapeId[]
+  showAllCaged?: boolean
+}
+
 /**
  * Local study document. `userId` reserved for future auth/sync.
+ * Preferir `boards[]`; campos flat são legado de migração.
  */
 export type Study = {
   id: string
@@ -30,18 +48,29 @@ export type Study = {
   userId?: string | null
   tuning: NoteName[]
   rootOffset: number
-  selectedNotes: NotePos[]
+  /** Braços do estudo (1+). */
+  boards?: StudyBoard[]
+  /** @deprecated Use `boards[0].selectedNotes` — mantido para JSON antigo. */
+  selectedNotes?: NotePos[]
+  /** @deprecated Import legado — ao normalizar, vira notas do board. */
   lick?: Lick
+  /** @deprecated Use `boards[0].overlays`. */
   overlays?: StudyOverlay[]
   notesText?: string
   labelMode?: 'note' | 'degree' | 'interval'
   /** Tônica para labels de grau/intervalo; se ausente, usa root do overlay. */
   labelTonic?: NoteName
-  /** Técnicas desenhadas no braço (linhas, slide, HO/PO, etc.). */
+  /** @deprecated Use `boards[0].annotations`. */
   annotations?: FretAnnotation[]
+  /** Espelha o braço para canhotos. */
+  leftHanded?: boolean
+  /** @deprecated Use `boards[0].firstFret`. */
+  firstFret?: number
+  /** @deprecated Use `boards[0].lastFret`. */
+  lastFret?: number
 }
 
-export type PrintItemKind = 'study' | 'scale' | 'caged' | 'lick' | 'custom'
+export type PrintItemKind = 'study' | 'scale' | 'caged' | 'custom'
 
 export type PrintItem = {
   kind: PrintItemKind
@@ -51,6 +80,7 @@ export type PrintItem = {
   scaleId?: string
   cagedShape?: string
   selectedNotes?: NotePos[]
+  /** @deprecated Import legado — tratado como notas marcadas. */
   lick?: Lick
   overlays?: StudyOverlay[]
   labelMode: 'note' | 'degree' | 'interval'

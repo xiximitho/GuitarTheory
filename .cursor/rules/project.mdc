@@ -13,3 +13,4 @@ App React + Vite + TS de estudos no braço da guitarra (PT-BR).
 - Persistência atual: localStorage + JSON. Auth é stub em `src/storage/auth.ts` — não implementar login sem pedido.
 - Validar com `npm run check` em mudanças relevantes.
 - UI em português; ids de escala em inglês (`dorian`, `minor-pentatonic`).
+- Braço: `tuning` (6–8), `leftHanded` compartilhados; `Study.boards[]` com notas/overlay/range por braço (`normalizeStudyBoards`).

@@ -117,6 +117,53 @@ export function transposePc(pc: PitchClass, semitones: number): PitchClass {
 /** Standard tuning low E → high e, string index 0 = low E */
 export const STANDARD_TUNING: NoteName[] = ['E', 'A', 'D', 'G', 'B', 'E']
 
+export type TuningPreset = {
+  id: string
+  name: string
+  tuning: NoteName[]
+}
+
+/** Presets pedagógicos — string 0 = corda mais grave. */
+export const TUNING_PRESETS: TuningPreset[] = [
+  { id: 'standard', name: 'Padrão EADGBE', tuning: ['E', 'A', 'D', 'G', 'B', 'E'] },
+  { id: 'drop-d', name: 'Drop D', tuning: ['D', 'A', 'D', 'G', 'B', 'E'] },
+  {
+    id: 'half-down',
+    name: '½ tom abaixo',
+    tuning: ['Eb', 'Ab', 'Db', 'Gb', 'Bb', 'Eb'],
+  },
+  { id: 'dadgad', name: 'DADGAD', tuning: ['D', 'A', 'D', 'G', 'A', 'D'] },
+  { id: 'open-g', name: 'Open G', tuning: ['D', 'G', 'D', 'G', 'B', 'D'] },
+  {
+    id: '7-string',
+    name: '7 cordas BEADGBE',
+    tuning: ['B', 'E', 'A', 'D', 'G', 'B', 'E'],
+  },
+  {
+    id: '8-string',
+    name: '8 cordas',
+    tuning: ['F#', 'B', 'E', 'A', 'D', 'G', 'B', 'E'],
+  },
+]
+
+/** Ajusta quantidade de cordas (6–8): remove/adiciona na grave. */
+export function resizeTuning(tuning: NoteName[], count: number): NoteName[] {
+  const target = Math.min(8, Math.max(6, count))
+  let next = [...tuning]
+  while (next.length > target) next = next.slice(1)
+  while (next.length < target) {
+    const add: NoteName = next.length === 6 ? 'B' : next.length === 7 ? 'F#' : 'C'
+    next = [add, ...next]
+  }
+  return next
+}
+
+export function matchTuningPresetId(tuning: NoteName[]): string | 'custom' {
+  const key = tuning.join(',')
+  const found = TUNING_PRESETS.find((p) => p.tuning.join(',') === key)
+  return found?.id ?? 'custom'
+}
+
 export function fretNotePc(
   openStringNote: NoteName,
   fret: number,
