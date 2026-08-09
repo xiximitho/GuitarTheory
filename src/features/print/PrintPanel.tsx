@@ -1,5 +1,5 @@
 import { Fretboard } from '@/components/Fretboard/Fretboard'
-import { cagedForScale, type CagedShapeId } from '@/theory/caged'
+import { cagedForScale, cagedShapeForRoot, type CagedShapeId } from '@/theory/caged'
 import {
   buildCagedMarks,
   buildLickMarks,
@@ -161,23 +161,23 @@ function PrintBlock({
   const labelMode = item.labelMode
   let marks = buildSelectedMarks(item.selectedNotes ?? [])
 
-  if (item.scaleId && item.root) {
+  if (item.cagedShape && item.root) {
+    const positions = item.scaleId
+      ? cagedForScale(
+          item.cagedShape as CagedShapeId,
+          item.root,
+          item.scaleId,
+          tuning,
+          0,
+          fretCount,
+        )
+      : cagedShapeForRoot(item.cagedShape as CagedShapeId, item.root, tuning, fretCount)
+    marks = mergeMarks(buildCagedMarks(positions), marks)
+  } else if (item.scaleId && item.root) {
     marks = mergeMarks(
       buildScaleMarks(tuning, item.root, item.scaleId, fretCount, 0),
       marks,
     )
-  }
-
-  if (item.cagedShape && item.root && item.scaleId) {
-    const positions = cagedForScale(
-      item.cagedShape as CagedShapeId,
-      item.root,
-      item.scaleId,
-      tuning,
-      0,
-      fretCount,
-    )
-    marks = mergeMarks(buildCagedMarks(positions), marks)
   }
 
   if (item.lick?.steps.length) {
@@ -201,6 +201,7 @@ function PrintBlock({
         fretCount={fretCount}
         rootOffset={0}
         marks={marks}
+        annotations={item.annotations ?? []}
         interactive={false}
         labelMode={labelMode}
         degreeRoot={item.root}

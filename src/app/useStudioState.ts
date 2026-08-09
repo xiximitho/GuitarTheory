@@ -9,12 +9,24 @@ import {
   newId,
   upsertStudy,
 } from '@/storage/studies'
+import {
+  makeConnectionAnnotation,
+  makePointAnnotation,
+  samePos,
+  transposeAnnotations,
+} from '@/theory/annotations'
 import { CAGED_ORDER, type CagedShapeId } from '@/theory/caged'
 import { notesToPitchClasses, toggleNote } from '@/theory/fretboardUtils'
 import { matchScalesFromPcs } from '@/theory/matcher'
 import { STANDARD_TUNING, noteToPc, pcToName, type NoteName } from '@/theory/notes'
 import type { ScaleDefinition } from '@/theory/scales'
 import { transposeLickSteps, transposePositionsBySemitones } from '@/theory/transpose'
+import type { BoardTool, FretAnnotation } from '@/types/annotation'
+import {
+  isAnnotationTool,
+  isConnectionAnnotation,
+  isPointAnnotation,
+} from '@/types/annotation'
 import type { LabelMode } from '@/types/fretboard'
 import type { NotePos, PrintItem, Study } from '@/types/study'
 
@@ -39,12 +51,15 @@ export function useStudioState() {
   /** Tônica explícita para graus/intervalos; `null` = automática (escala/CAGED). */
   const [labelTonic, setLabelTonic] = useState<NoteName | null>(null)
   const [notesText, setNotesText] = useState('')
+  const [boardTool, setBoardTool] = useState<BoardTool>('select')
+  const [annotations, setAnnotations] = useState<FretAnnotation[]>([])
+  const [annotationFrom, setAnnotationFrom] = useState<NotePos | null>(null)
 
   const [overlayScaleId, setOverlayScaleId] = useState<string | null>(null)
   const [overlayRoot, setOverlayRoot] = useState<NoteName | null>(null)
 
   const [cagedRoot, setCagedRoot] = useState<NoteName>('C')
-  const [cagedScaleId, setCagedScaleId] = useState('major')
+  const [cagedScaleId, setCagedScaleId] = useState<string | null>(null)
   const [cagedShapes, setCagedShapes] = useState<CagedShapeId[]>(['E'])
   const [showAllCaged, setShowAllCaged] = useState(false)
 
@@ -107,12 +122,58 @@ export function useStudioState() {
     else if (tab === 'explorer') setLickMode(false)
   }, [tab])
 
+  useEffect(() => {
+    setAnnotationFrom(null)
+  }, [boardTool])
+
+  function handleBoardToolChange(tool: BoardTool) {
+    setBoardTool(tool)
+  }
+
   function handleToggle(string: number, fret: number) {
+    const pos = { string, fret }
+
+    if (isAnnotationTool(boardTool)) {
+      if (isPointAnnotation(boardTool)) {
+        const ann = makePointAnnotation(boardTool, pos)
+        if (ann) setAnnotations((prev) => [...prev, ann])
+        return
+      }
+      if (isConnectionAnnotation(boardTool)) {
+        if (!annotationFrom) {
+          setAnnotationFrom(pos)
+          return
+        }
+        if (samePos(annotationFrom, pos)) {
+          setAnnotationFrom(null)
+          return
+        }
+        const ann = makeConnectionAnnotation(boardTool, annotationFrom, pos)
+        if (ann) setAnnotations((prev) => [...prev, ann])
+        setAnnotationFrom(null)
+        return
+      }
+    }
+
     if (lickMode || tab === 'lick') {
-      setLickSteps((prev) => [...prev, { string, fret }])
+      setLickSteps((prev) => [...prev, pos])
       return
     }
     setSelectedNotes((prev) => toggleNote(prev, string, fret))
+  }
+
+  function undoAnnotation() {
+    setAnnotations((prev) => prev.slice(0, -1))
+    setAnnotationFrom(null)
+  }
+
+  function clearAnnotations() {
+    setAnnotations([])
+    setAnnotationFrom(null)
+  }
+
+  function cancelAnnotationFrom() {
+    setAnnotationFrom(null)
   }
 
   function handleSelectMatch(scale: ScaleDefinition, root: string) {
@@ -130,6 +191,8 @@ export function useStudioState() {
   function transposeBoard(semitones: number) {
     setSelectedNotes((n) => transposePositionsBySemitones(n, semitones, FRET_COUNT))
     setLickSteps((n) => transposeLickSteps(n, semitones, FRET_COUNT))
+    setAnnotations((a) => transposeAnnotations(a, semitones, FRET_COUNT))
+    setAnnotationFrom(null)
     setRootOffset((o) => o + semitones)
     setOverlayRoot((r) => (r ? shiftRoot(r, semitones) : r))
     setCagedRoot((r) => shiftRoot(r, semitones))
@@ -172,6 +235,7 @@ export function useStudioState() {
       notesText: notesText || undefined,
       labelMode,
       labelTonic: labelTonic ?? undefined,
+      annotations: annotations.length ? annotations : undefined,
     }
     setStudies(upsertStudy(study))
     setActiveStudyId(study.id)
@@ -186,6 +250,9 @@ export function useStudioState() {
     setNotesText(study.notesText ?? '')
     setLabelMode(study.labelMode ?? 'note')
     setLabelTonic(study.labelTonic ?? study.overlays?.[0]?.root ?? null)
+    setAnnotations(study.annotations ?? [])
+    setAnnotationFrom(null)
+    setBoardTool('select')
     const ov = study.overlays?.[0]
     if (ov?.kind === 'caged') {
       setTab('caged')
@@ -213,17 +280,21 @@ export function useStudioState() {
 
   function currentAsPrintItem(): PrintItem {
     const printRoot = labelRoot
+    const shared = {
+      annotations: annotations.length ? annotations : undefined,
+    }
     if (tab === 'caged') {
       return {
         kind: 'caged',
-        title: `${cagedRoot} ${cagedScaleId} · CAGED ${showAllCaged ? 'ALL' : cagedShapes.join('')}`,
+        title: `${cagedRoot}${cagedScaleId ? ` ${cagedScaleId}` : ''} · CAGED ${showAllCaged ? 'ALL' : cagedShapes.join('')}`,
         root: printRoot ?? cagedRoot,
-        scaleId: cagedScaleId,
+        scaleId: cagedScaleId ?? undefined,
         cagedShape: showAllCaged ? undefined : cagedShapes[0],
         selectedNotes,
         labelMode,
         rootOffset,
         notesText: notesText || undefined,
+        ...shared,
       }
     }
     return {
@@ -236,6 +307,7 @@ export function useStudioState() {
       labelMode,
       rootOffset,
       notesText: notesText || undefined,
+      ...shared,
     }
   }
 
@@ -251,6 +323,7 @@ export function useStudioState() {
       labelMode: study.labelMode ?? 'note',
       rootOffset: study.rootOffset,
       notesText: study.notesText,
+      annotations: study.annotations,
     }
   }
 
@@ -272,6 +345,13 @@ export function useStudioState() {
     labelRoot,
     notesText,
     setNotesText,
+    boardTool,
+    setBoardTool: handleBoardToolChange,
+    annotations,
+    annotationFrom,
+    undoAnnotation,
+    clearAnnotations,
+    cancelAnnotationFrom,
     overlayScaleId,
     overlayRoot,
     cagedRoot,

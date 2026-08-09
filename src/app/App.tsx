@@ -6,6 +6,7 @@ import { ExplorerPanel } from '@/features/explorer/ExplorerPanel'
 import { PrintPanel } from '@/features/print/PrintPanel'
 import { StudiesPanel } from '@/features/studies/StudiesPanel'
 import { ROOT_OPTIONS, type NoteName } from '@/theory/notes'
+import { BOARD_TOOLS, isAnnotationTool } from '@/types/annotation'
 import '@/styles/app.css'
 
 export default function App() {
@@ -124,6 +125,61 @@ export default function App() {
               )}
 
               <div className="toolbar__group">
+                <span className="toolbar__label">Ferramenta</span>
+                {BOARD_TOOLS.map((tool) => (
+                  <button
+                    key={tool.id}
+                    type="button"
+                    className={`chip ${s.boardTool === tool.id ? 'is-active' : ''}`}
+                    onClick={() => s.setBoardTool(tool.id)}
+                    title={tool.title}
+                  >
+                    {tool.label}
+                  </button>
+                ))}
+              </div>
+
+              {isAnnotationTool(s.boardTool) && (
+                <div className="toolbar__group">
+                  {s.annotationFrom ? (
+                    <span className="pill">
+                      2º clique: destino
+                      <button
+                        type="button"
+                        className="btn btn--ghost"
+                        onClick={s.cancelAnnotationFrom}
+                        title="Cancela o ponto de origem"
+                      >
+                        Cancelar
+                      </button>
+                    </span>
+                  ) : (
+                    <span className="toolbar__hint">
+                      {s.boardTool === 'vibrato' || s.boardTool === 'harmonic'
+                        ? 'Clique numa casa'
+                        : 'Clique origem, depois destino'}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    onClick={s.undoAnnotation}
+                    disabled={!s.annotations.length && !s.annotationFrom}
+                  >
+                    Desfazer traço
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    onClick={s.clearAnnotations}
+                    disabled={!s.annotations.length && !s.annotationFrom}
+                  >
+                    Limpar traços
+                  </button>
+                </div>
+              )}
+
+              <div className="toolbar__group">
                 {(s.tab === 'lick' || s.lickMode) && (
                   <>
                     <span className="pill pill--lick">Modo lick</span>
@@ -161,6 +217,8 @@ export default function App() {
               fretCount={FRET_COUNT}
               rootOffset={0}
               marks={s.marks}
+              annotations={s.annotations}
+              pendingFrom={s.annotationFrom}
               interactive
               onToggleNote={s.handleToggle}
               labelMode={s.labelMode}

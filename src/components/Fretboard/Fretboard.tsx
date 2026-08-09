@@ -6,7 +6,10 @@ import {
   type AccidentalPreference,
   type NoteName,
 } from '@/theory/notes'
+import type { FretAnnotation } from '@/types/annotation'
 import type { FretMark, LabelMode } from '@/types/fretboard'
+import type { NotePos } from '@/types/study'
+import { FretboardAnnotations } from './FretboardAnnotations'
 import './Fretboard.css'
 
 export type { FretMark, LabelMode }
@@ -16,6 +19,8 @@ type Props = {
   fretCount?: number
   rootOffset?: number
   marks?: FretMark[]
+  annotations?: FretAnnotation[]
+  pendingFrom?: NotePos | null
   interactive?: boolean
   onToggleNote?: (string: number, fret: number) => void
   labelMode?: LabelMode
@@ -33,6 +38,8 @@ export function Fretboard({
   fretCount = 15,
   rootOffset = 0,
   marks = [],
+  annotations = [],
+  pendingFrom = null,
   interactive = true,
   onToggleNote,
   labelMode = 'note',
@@ -57,6 +64,14 @@ export function Fretboard({
   const width = labelW + nutW + fretCount * cellW + 8
   const height = stringCount * cellH + (showFretNumbers ? 22 : 8)
   const rootPc = degreeRoot ? fretNotePc(degreeRoot, 0, 0) : 0
+  const layout = { stringCount, cellW, cellH, nutW, labelW }
+  const stringTopY = 8 + cellH / 2
+  const stringBottomY = 8 + (stringCount - 1) * cellH + cellH / 2
+  // Trastes passam um pouco das cordas externas para as bolinhas ficarem
+  // visualmente centralizadas no vão vertical do braço.
+  const fretTopY = stringTopY - cellH / 2
+  const fretBottomY = stringBottomY + cellH / 2
+  const boardMidY = (stringTopY + stringBottomY) / 2
 
   return (
     <svg
@@ -98,9 +113,9 @@ export function Fretboard({
           <line
             key={`fret-${f}`}
             x1={x}
-            y1={8}
+            y1={fretTopY}
             x2={x}
-            y2={8 + (stringCount - 1) * cellH}
+            y2={fretBottomY}
             className={
               f === 0 ? 'fretboard__fret fretboard__fret--nut' : 'fretboard__fret'
             }
@@ -128,12 +143,22 @@ export function Fretboard({
         const fret = i + 1
         if (!FRET_MARKERS.has(fret)) return null
         const x = labelW + nutW + i * cellW + cellW / 2
-        const midY = 8 + ((stringCount - 1) * cellH) / 2
+        const inlayGap = Math.min(14, cellH)
         if (fret === 12) {
           return (
             <g key={`inl-${fret}`}>
-              <circle cx={x} cy={midY - 14} r={3.5} className="fretboard__inlay" />
-              <circle cx={x} cy={midY + 14} r={3.5} className="fretboard__inlay" />
+              <circle
+                cx={x}
+                cy={boardMidY - inlayGap}
+                r={3.5}
+                className="fretboard__inlay"
+              />
+              <circle
+                cx={x}
+                cy={boardMidY + inlayGap}
+                r={3.5}
+                className="fretboard__inlay"
+              />
             </g>
           )
         }
@@ -141,7 +166,7 @@ export function Fretboard({
           <circle
             key={`inl-${fret}`}
             cx={x}
-            cy={midY}
+            cy={boardMidY}
             r={3.5}
             className="fretboard__inlay"
           />
@@ -174,7 +199,7 @@ export function Fretboard({
             <g key={key}>
               {interactive && (
                 <rect
-                  x={cx - cellW / 2}
+                  x={fret === 0 ? cx - nutW / 2 : cx - cellW / 2}
                   y={cy - cellH / 2}
                   width={fret === 0 ? nutW : cellW}
                   height={cellH}
@@ -188,7 +213,7 @@ export function Fretboard({
                 >
                   <circle cx={cx} cy={cy} r={compact ? 8 : 10} />
                   {text && (
-                    <text x={cx} y={cy + 3.5} textAnchor="middle">
+                    <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central">
                       {text}
                     </text>
                   )}
@@ -197,6 +222,14 @@ export function Fretboard({
             </g>
           )
         }),
+      )}
+
+      {(annotations.length > 0 || pendingFrom) && (
+        <FretboardAnnotations
+          annotations={annotations}
+          layout={layout}
+          pendingFrom={pendingFrom}
+        />
       )}
 
       {showFretNumbers &&

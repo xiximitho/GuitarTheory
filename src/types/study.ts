@@ -1,4 +1,5 @@
 import type { NoteName } from '@/theory/notes'
+import type { FretAnnotation } from '@/types/annotation'
 
 export type NotePos = {
   string: number
@@ -36,6 +37,8 @@ export type Study = {
   labelMode?: 'note' | 'degree' | 'interval'
   /** Tônica para labels de grau/intervalo; se ausente, usa root do overlay. */
   labelTonic?: NoteName
+  /** Técnicas desenhadas no braço (linhas, slide, HO/PO, etc.). */
+  annotations?: FretAnnotation[]
 }
 
 export type PrintItemKind = 'study' | 'scale' | 'caged' | 'lick' | 'custom'
@@ -53,6 +56,7 @@ export type PrintItem = {
   labelMode: 'note' | 'degree' | 'interval'
   rootOffset?: number
   notesText?: string
+  annotations?: FretAnnotation[]
 }
 
 export type PrintPack = {

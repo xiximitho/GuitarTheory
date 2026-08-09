@@ -53,6 +53,72 @@
   pointer-events: none;
 }
 
+.fretboard__pending {
+  fill: none;
+  stroke: var(--accent, #d4a24c);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 2;
+}
+
+.fretboard__ann {
+  fill: none;
+  stroke: #f0e6d4;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.fretboard__ann--vibrato {
+  stroke-width: 1.4;
+}
+
+.fretboard__ann--harmonic {
+  stroke: #f0e6d4;
+  stroke-width: 1.5;
+  fill: rgba(240, 230, 212, 0.08);
+}
+
+.fretboard__ann--arrow line,
+.fretboard__ann--arrow path,
+.fretboard__ann--slide line,
+.fretboard__ann--hammer path,
+.fretboard__ann--pull path,
+.fretboard__ann--line {
+  stroke: #f0e6d4;
+}
+
+.fretboard__ann--slide text,
+.fretboard__ann--hammer text,
+.fretboard__ann--pull text {
+  fill: #f0e6d4;
+  font-size: 9px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+@media print {
+  .fretboard__ann,
+  .fretboard__ann--arrow line,
+  .fretboard__ann--arrow path,
+  .fretboard__ann--slide line,
+  .fretboard__ann--hammer path,
+  .fretboard__ann--pull path,
+  .fretboard__ann--line,
+  .fretboard__ann--harmonic {
+    stroke: #111;
+  }
+
+  .fretboard__ann--slide text,
+  .fretboard__ann--hammer text,
+  .fretboard__ann--pull text {
+    fill: #111;
+  }
+
+  .fretboard__ann--harmonic {
+    fill: rgba(0, 0, 0, 0.04);
+  }
+}
+
 .fretboard__mark circle {
   stroke: rgba(0, 0, 0, 0.25);
   stroke-width: 1;
@@ -64,6 +130,7 @@
   font-weight: 700;
   font-family: var(--font-mono);
   pointer-events: none;
+  dominant-baseline: central;
 }
 
 .fretboard__mark--selected circle {

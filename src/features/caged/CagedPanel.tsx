@@ -4,11 +4,12 @@ import { getScaleById, SCALE_CATALOG } from '@/theory/scales'
 
 type Props = {
   root: NoteName
-  scaleId: string
+  /** `null` = mostrar só as notas do shape CAGED, sem filtrar por escala. */
+  scaleId: string | null
   activeShapes: CagedShapeId[]
   showAllShapes: boolean
   onRootChange: (root: NoteName) => void
-  onScaleChange: (scaleId: string) => void
+  onScaleChange: (scaleId: string | null) => void
   onToggleShape: (shape: CagedShapeId) => void
   onShowAll: (all: boolean) => void
 }
@@ -26,7 +27,7 @@ export function CagedPanel({
   const modes = SCALE_CATALOG.filter(
     (s) => s.category === 'mode' || s.id === 'major' || s.id === 'natural-minor',
   )
-  const selected = getScaleById(scaleId)
+  const selected = scaleId ? getScaleById(scaleId) : undefined
 
   return (
     <aside className="panel">
@@ -34,8 +35,8 @@ export function CagedPanel({
         <h2>CAGED &amp; Modos</h2>
       </div>
       <p className="panel__hint">
-        Escolha o tom e a escala/modo. Os shapes CAGED são baseados no sistema maior e
-        filtrados pelas notas da escala selecionada.
+        Escolha o tom e o shape. Sem escala, vê só as notas do CAGED; com escala/modo, o
+        shape é filtrado por essas notas.
       </p>
 
       <label className="field">
@@ -51,7 +52,11 @@ export function CagedPanel({
 
       <label className="field">
         <span>Escala / Modo</span>
-        <select value={scaleId} onChange={(e) => onScaleChange(e.target.value)}>
+        <select
+          value={scaleId ?? ''}
+          onChange={(e) => onScaleChange(e.target.value ? e.target.value : null)}
+        >
+          <option value="">Nenhuma (só CAGED)</option>
           {modes.map((s) => (
             <option key={s.id} value={s.id}>
               {s.name}
@@ -63,6 +68,9 @@ export function CagedPanel({
 
       {selected && (
         <p className="scale-formula">{formatScaleFormula(selected.intervals)}</p>
+      )}
+      {!scaleId && (
+        <p className="scale-formula">Shape CAGED completo · sem filtro de escala</p>
       )}
 
       <div className="field">

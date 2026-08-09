@@ -5,7 +5,12 @@ import {
   buildSelectedMarks,
   mergeMarks,
 } from '@/theory/fretboardUtils'
-import { CAGED_ORDER, cagedForScale, type CagedShapeId } from '@/theory/caged'
+import {
+  CAGED_ORDER,
+  cagedForScale,
+  cagedShapeForRoot,
+  type CagedShapeId,
+} from '@/theory/caged'
 import type { NoteName } from '@/theory/notes'
 import type { FretMark } from '@/types/fretboard'
 import type { NotePos } from '@/types/study'
@@ -17,7 +22,8 @@ type BuildMarksInput = {
   showAllCaged: boolean
   cagedShapes: CagedShapeId[]
   cagedRoot: NoteName
-  cagedScaleId: string
+  /** `null` = shape CAGED puro, sem filtrar por escala. */
+  cagedScaleId: string | null
   overlayScaleId: string | null
   overlayRoot: NoteName | null
   lickSteps: NotePos[]
@@ -42,7 +48,9 @@ export function buildStudioMarks(input: BuildMarksInput): FretMark[] {
     const shapes = showAllCaged ? CAGED_ORDER : cagedShapes
     const groups = shapes.map((shape) =>
       buildCagedMarks(
-        cagedForScale(shape, cagedRoot, cagedScaleId, tuning, 0, FRET_COUNT),
+        cagedScaleId
+          ? cagedForScale(shape, cagedRoot, cagedScaleId, tuning, 0, FRET_COUNT)
+          : cagedShapeForRoot(shape, cagedRoot, tuning, FRET_COUNT),
       ),
     )
     return mergeMarks(...groups)
